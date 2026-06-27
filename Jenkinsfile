@@ -1,21 +1,12 @@
-@Library("Shared") _
 pipeline{
     
-    agent { label "dev"};
+    agent any;
     
     stages{
         stage("Code Clone"){
             steps{
-               script{
-                   clone("https://github.com/LondheShubham153/two-tier-flask-app.git", "master")
-               }
-            }
-        }
-        stage("Trivy File System Scan"){
-            steps{
-                script{
-                    trivy_fs()
-                }
+               git url: "https://github.com/AkshitD28/two-tier-flask-app.git",
+                   branch: "main"
             }
         }
         stage("Build"){
@@ -30,11 +21,22 @@ pipeline{
             }
             
         }
-        stage("Push to Docker Hub"){
-            steps{
-                script{
-                    docker_push("dockerHubCreds","two-tier-flask-app")
-                }  
+        stage("Push to Docker Hub") {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerHubCreds',
+                    passwordVariable: 'dockerHubPass',
+                    usernameVariable: 'dockerHubUser'
+                )]) {
+                    // Log in to Docker Hub
+                    sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
+                    
+                    // Tag the image (Ensure this matches your local image name)
+                    sh "docker tag two-tier-flask-app ${env.dockerHubUser}/two-tier-flask-app:latest"
+                    
+                    // Push the tagged image
+                    sh "docker push ${env.dockerHubUser}/two-tier-flask-app:latest"
+                }
             }
         }
         stage("Deploy"){
@@ -44,22 +46,3 @@ pipeline{
         }
     }
 
-post{
-        success{
-            script{
-                emailext from: 'mentor@akshitd28.com',
-                to: 'mentor@akshitd28.com',
-                body: 'Build success for Demo CICD App',
-                subject: 'Build success for Demo CICD App'
-            }
-        }
-        failure{
-            script{
-                emailext from: 'mentor@akshitd28.com',
-                to: 'mentor@akshitd28.com',
-                body: 'Build Failed for Demo CICD App',
-                subject: 'Build Failed for Demo CICD App'
-            }
-        }
-    }
-}
