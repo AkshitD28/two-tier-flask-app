@@ -9,6 +9,11 @@ pipeline{
                    branch: "main"
             }
         }
+        stage("Trivy file system scan"){
+            steps{
+              sh 'sudo -u jenkins trivy fs . -o results.json'
+            }
+        }
         stage("Build"){
             steps{
                 sh "docker build -t two-tier-flask-app ."
@@ -42,6 +47,24 @@ pipeline{
         stage("Deploy"){
             steps{
                 sh "docker compose up -d --build flask-app"
+            }
+        }
+    }
+    post{
+        success{
+            script{
+                emailext from: 'akshitdubey2808@gmail.com',
+                    to: 'akshitdubey2808@gmail.com',
+                    body: 'Build is success for cicd app',
+                    subject: 'Build Success For Demo CiCd app'
+            }
+        }
+        failure{
+            script{
+                emailext from: 'akshitdubey2808@gmail.com',
+                    to: 'akshitdubey2808@gmail.com',
+                    body: 'Build is Failed for cicd app',
+                    subject: 'Build Failed for Demo CiCd app'
             }
         }
     }
