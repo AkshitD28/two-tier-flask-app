@@ -53,10 +53,13 @@ pipeline{
     post{
         success{
             script{
-                emailext from: 'akshitdubey2808@gmail.com',
-                    to: 'akshitdubey2808@gmail.com',
-                    body: 'Build is success for cicd app',
-                    subject: 'Build Success For Demo CiCd app'
+                emailext (
+            from: 'akshitdubey2808@gmail.com',
+            to: 'akshitdubey2808@gmail.com',
+            subject: 'Build Success For Demo CiCd app',
+            body: 'Build is success for cicd app',
+            mimeType: 'text/plain' // Explicitly forces raw text to bypass log attachment parsers
+        )
             }
         }
         failure{
